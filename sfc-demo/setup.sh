@@ -7,9 +7,6 @@ fi
 
 # Ensure https_proxy is equals to http_proxy and that are both exported
 export http{,s}_proxy=${http_proxy}
-git clone https://github.com/langbeck/odl-sfc-scripts.git
-PATCH_DIR=$PWD/odl-sfc-scripts/sfc-demo/
-
 
 # Disable sudo password requirement
 sudo sed -i -r 's/^%sudo.*/%sudo ALL=(ALL) NOPASSWD: ALL/' /etc/sudoers
@@ -20,6 +17,10 @@ sudo sed -i -r 's/^[^#](.*Proxy.*)/#\1/' /etc/apt/apt.conf
 # We can't simply clone in home (setup_odl.sh does: rm -rf $HOME/sfc)
 mkdir $HOME/git
 cd $HOME/git
+
+# Clone odl-sfc-scripts
+git clone https://github.com/langbeck/odl-sfc-scripts.git
+PATCH_DIR=$PWD/odl-sfc-scripts/sfc-demo/
 
 # Clone the sfc repository
 git clone https://github.com/opendaylight/sfc.git
