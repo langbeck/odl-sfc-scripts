@@ -1,0 +1,134 @@
+commit aaf7a1e13173002f2347f33c54b242a68372b28b
+Author: Langbeck <langbeck@hpe.com>
+Date:   Tue Nov 8 20:59:37 2016 -0200
+
+    Proxy support for sfc-demo
+
+diff --git a/sfc-demo/sfc103/Dockerfile b/sfc-demo/sfc103/Dockerfile
+index fd03e8f..19b6185 100644
+--- a/sfc-demo/sfc103/Dockerfile
++++ b/sfc-demo/sfc103/Dockerfile
+@@ -5,6 +5,9 @@ MAINTAINER ericdia
+ ENV CONTROLLER=192.168.1.5
+ ENV BRIDGE=br-sfc
+ 
++ENV https_proxy=${http_proxy}
++ENV http_proxy=${http_proxy}
++
+ RUN apt-get update && apt-get install -y git libtool m4 autoconf automake make \
+     libssl-dev libcap-ng-dev python3 python3-pip python-six vlan iptables wget \
+     net-tools init-system-helpers kmod uuid-runtime
+diff --git a/sfc-demo/sfc103/run_demo.sh b/sfc-demo/sfc103/run_demo.sh
+old mode 100755
+new mode 100644
+index db9c780..097566c
+--- a/sfc-demo/sfc103/run_demo.sh
++++ b/sfc-demo/sfc103/run_demo.sh
+@@ -1,5 +1,6 @@
+ #!/bin/bash
+ 
++
+ function clean {
+     cd /vagrant; docker-compose down
+     printf "Stopping karaf ...  "
+@@ -42,6 +43,7 @@ function build_docker {
+ }
+ 
+ function start_demo {
++    unset http_proxy
+ 
+     /sfc/sfc-demo/sfc103/setup_sfc.py
+     #wait for openflow effective
+@@ -52,7 +54,7 @@ function start_demo {
+     docker exec -it sff1 ovs-ofctl dump-flows -OOpenflow13 br-sfc
+     docker exec -it sff2 ovs-ofctl dump-flows -OOpenflow13 br-sfc
+ 
+-    docker exec -it classifier1 ip netns exec app wget http://192.168.2.2
++    docker exec -it classifier1 ip netns exec app wget --no-proxy http://192.168.2.2
+ 
+ 
+     #dynamic insert & remove sf
+@@ -66,7 +68,7 @@ function start_demo {
+     docker exec -it sff1 ovs-ofctl dump-flows -OOpenflow13 br-sfc
+     docker exec -it sff2 ovs-ofctl dump-flows -OOpenflow13 br-sfc
+ 
+-    docker exec -it classifier1 ip netns exec app wget http://192.168.2.2
++    docker exec -it classifier1 ip netns exec app wget --no-proxy http://192.168.2.2
+ }
+ 
+ 
+diff --git a/sfc-demo/sfc103/setup_odl.sh b/sfc-demo/sfc103/setup_odl.sh
+index 64c758b..9b089d4 100755
+--- a/sfc-demo/sfc103/setup_odl.sh
++++ b/sfc-demo/sfc103/setup_odl.sh
+@@ -1,7 +1,7 @@
+ #!/bin/bash
+ 
+ # setup sfc from pre-build. If DIST_URL is null, build sfc from scratch
+-DIST_URL=https://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/org/opendaylight/integration/distribution-karaf/0.5.1-SNAPSHOT/
++DIST_URL=http://sdcs-nexus.americas.hpqcorp.net/content/repositories/opendaylight.snapshot/org/opendaylight/integration/distribution-karaf/0.5.1-SNAPSHOT/
+ 
+ function install_packages {
+     sudo apt-get install npm vim git git-review diffstat bridge-utils -y
+@@ -53,7 +53,7 @@ function install_ovs {
+ function install_sfc {
+     cd $HOME
+     if [[ -n $DIST_URL ]]; then
+-        curl $DIST_URL/maven-metadata.xml | grep -A2 tar.gz | grep value | cut -f2 -d'>' | cut -f1 -d'<' | \
++        http_proxy= curl $DIST_URL/maven-metadata.xml | grep -A2 tar.gz | grep value | cut -f2 -d'>' | cut -f1 -d'<' | \
+             xargs -I {} curl $DIST_URL/distribution-karaf-{}.tar.gz | tar xvz-
+         rm -rf $HOME/sfc; mkdir -p $HOME/sfc/sfc-karaf/target
+         mv distribution-karaf* $HOME/sfc/sfc-karaf/target/assembly
+diff --git a/sfc-demo/sfc103/setup_proxy.sh b/sfc-demo/sfc103/setup_proxy.sh
+new file mode 100755
+index 0000000..e3006b3
+--- /dev/null
++++ b/sfc-demo/sfc103/setup_proxy.sh
+@@ -0,0 +1,47 @@
++#!/bin/bash
++set -e
++
++if [ $# -gt 1 ]; then
++    echo "Usage $0 [http_proxy]"
++    exit 1
++fi
++
++
++PROXY="$1"
++
++# If a proxy wasn't provided, try to inherit the environment configuration.
++if [ -z "${PROXY}" ]; then
++    PROXY="${http_proxy}"
++
++    if [ -z "${PROXY}" ]; then
++        PROXY="${HTTP_PROXY}"
++    fi
++fi
++
++
++
++config_file() {
++    rm -f "$1" && test -n "${PROXY}" && mkdir -p "$(dirname $1)" && tee > $1 || true
++}
++
++
++config_file /etc/systemd/system/docker.service.d/proxy.conf <<EOF
++[Service]
++Environment="HTTP_PROXY=${PROXY}"
++EOF
++
++config_file /etc/apt/apt.conf.d/99proxy <<EOF
++Acquire::https::Proxy "${PROXY}";
++Acquire::http::Proxy "${PROXY}";
++EOF
++
++config_file /etc/profile.d/proxy.sh <<EOF
++export http{,s}_proxy=${PROXY}
++EOF
++
++config_file /etc/sudoers.d/proxy <<EOF
++Defaults env_keep += "http_proxy"
++Defaults env_keep += "https_proxy"
++Defaults env_keep += "HTTP_PROXY"
++Defaults env_keep += "HTTPS_PROXY"
++EOF
