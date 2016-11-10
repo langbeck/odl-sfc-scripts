@@ -1,4 +1,4 @@
-commit 57b8af057c4c5f79d3ce58082ee846cde051a4e9
+commit 2c7650d2ffc948c939228508294676e1a2418a06
 Author: Langbeck <langbeck@hpe.com>
 Date:   Tue Nov 8 20:59:37 2016 -0200
 
@@ -57,69 +57,3 @@ index db9c780..097566c
  }
  
  
-diff --git a/sfc-demo/sfc103/setup_odl.sh b/sfc-demo/sfc103/setup_odl.sh
-index 64c758b..b888673 100755
---- a/sfc-demo/sfc103/setup_odl.sh
-+++ b/sfc-demo/sfc103/setup_odl.sh
-@@ -1,7 +1,7 @@
- #!/bin/bash
- 
- # setup sfc from pre-build. If DIST_URL is null, build sfc from scratch
--DIST_URL=https://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/org/opendaylight/integration/distribution-karaf/0.5.1-SNAPSHOT/
-+DIST_URL=http://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/org/opendaylight/integration/distribution-karaf/0.5.1-SNAPSHOT/
- 
- function install_packages {
-     sudo apt-get install npm vim git git-review diffstat bridge-utils -y
-diff --git a/sfc-demo/sfc103/setup_proxy.sh b/sfc-demo/sfc103/setup_proxy.sh
-new file mode 100755
-index 0000000..e3006b3
---- /dev/null
-+++ b/sfc-demo/sfc103/setup_proxy.sh
-@@ -0,0 +1,47 @@
-+#!/bin/bash
-+set -e
-+
-+if [ $# -gt 1 ]; then
-+    echo "Usage $0 [http_proxy]"
-+    exit 1
-+fi
-+
-+
-+PROXY="$1"
-+
-+# If a proxy wasn't provided, try to inherit the environment configuration.
-+if [ -z "${PROXY}" ]; then
-+    PROXY="${http_proxy}"
-+
-+    if [ -z "${PROXY}" ]; then
-+        PROXY="${HTTP_PROXY}"
-+    fi
-+fi
-+
-+
-+
-+config_file() {
-+    rm -f "$1" && test -n "${PROXY}" && mkdir -p "$(dirname $1)" && tee > $1 || true
-+}
-+
-+
-+config_file /etc/systemd/system/docker.service.d/proxy.conf <<EOF
-+[Service]
-+Environment="HTTP_PROXY=${PROXY}"
-+EOF
-+
-+config_file /etc/apt/apt.conf.d/99proxy <<EOF
-+Acquire::https::Proxy "${PROXY}";
-+Acquire::http::Proxy "${PROXY}";
-+EOF
-+
-+config_file /etc/profile.d/proxy.sh <<EOF
-+export http{,s}_proxy=${PROXY}
-+EOF
-+
-+config_file /etc/sudoers.d/proxy <<EOF
-+Defaults env_keep += "http_proxy"
-+Defaults env_keep += "https_proxy"
-+Defaults env_keep += "HTTP_PROXY"
-+Defaults env_keep += "HTTPS_PROXY"
-+EOF

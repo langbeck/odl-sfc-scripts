@@ -21,7 +21,16 @@ cd $HOME/git
 
 # Clone odl-sfc-scripts
 git clone https://github.com/langbeck/odl-sfc-scripts.git
-PATCH_DIR=$PWD/odl-sfc-scripts/sfc-demo/
+SCRIPTS_DIR=$PWD/odl-sfc-scripts/sfc-demo/
+
+# Configure proxy environment files (docker, apt, profile, sudoers, etc)
+sudo $SCRIPTS_DIR/setup_proxy.sh "${http_proxy}"
+
+# Install docker
+if ! which docker > /dev/null; then
+    curl -L https://get.docker.com/ | sudo sh
+    sudo usermod -aG docker "${USER}"
+fi
 
 # Clone the sfc repository
 git clone https://github.com/opendaylight/sfc.git
@@ -31,20 +40,11 @@ cd sfc
 git reset --hard f65065b19516a750b73262c63ba269fca2365e23
 
 # Apply patches required to add proxy support
-cp $PATCH_DIR/*.patch ./
+cp $SCRIPTS_DIR/*.patch ./
 git apply *.patch
 
-# Configure proxy environment files (docker, apt, profile, sudoers, etc)
-cd sfc-demo/sfc103
-sudo ./setup_proxy.sh "${http_proxy}"
-
-# Install docker
-if ! which docker > /dev/null; then
-    curl -L https://get.docker.com/ | sudo sh
-    sudo usermod -aG docker "${USER}"
-fi
-
 # Link base directories
+cd sfc-demo/sfc103
 test -d /sfc || sudo ln -s "$(realpath ${PWD}/../..)" /sfc
 test -d /vagrant || sudo ln -s "/sfc/sfc-demo/sfc103" /vagrant
 
