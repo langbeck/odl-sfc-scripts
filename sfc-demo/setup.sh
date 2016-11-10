@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 if [ -z "${http_proxy}" ]; then
     echo "http_proxy environment not defined"
@@ -31,9 +32,7 @@ git reset --hard f65065b19516a750b73262c63ba269fca2365e23
 
 # Apply patches required to add proxy support
 cp $PATCH_DIR/*.patch ./
-git config user.email odl@opendaylight.org
-git config user.name odl
-git am *.patch
+git apply *.patch
 
 # Configure proxy environment files (docker, apt, profile, sudoers, etc)
 cd sfc-demo/sfc103
