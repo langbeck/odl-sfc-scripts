@@ -13,7 +13,7 @@ export http{,s}_proxy=${http_proxy}
 sudo sed -i -r 's/^%sudo.*/%sudo ALL=(ALL) NOPASSWD: ALL/' /etc/sudoers
 
 # Comment any existing apt proxy settings from default configuration file
-sudo sed -i -r 's/^[^#](.*Proxy.*)/#\1/' /etc/apt/apt.conf
+test -e /etc/apt/apt.conf && sudo sed -i -r 's/^[^#](.*Proxy.*)/#\1/' /etc/apt/apt.conf
 
 # We can't simply clone in home (setup_odl.sh does: rm -rf $HOME/sfc)
 mkdir $HOME/git
