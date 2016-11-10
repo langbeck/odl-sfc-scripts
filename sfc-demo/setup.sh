@@ -49,15 +49,30 @@ test -d /sfc || sudo ln -s "$(realpath ${PWD}/../..)" /sfc
 test -d /vagrant || sudo ln -s "/sfc/sfc-demo/sfc103" /vagrant
 
 # Run the "original" setup_odl.sh
-./setup_odl.sh
+if ! ./setup_odl.sh; then
+    echo "ERRO: ./setup_odl.sh exited with non-zero status code"
+    exit 1
+fi
+
+
+if ! which java > /dev/null; then
+    echo "ERRO: ./setup_odl.sh failed to install java (trying: apt install openjdk-8-jdk)"
+    sudo apt install openjdk-8-jdk -y
+fi
+
+if ! which mvn > /dev/null; then
+    echo "ERRO: ./setup_odl.sh failed to install maven (trying: apt install maven)"
+    # package maven is version 3.3.3 in Ubuntu 15.10
+    sudo apt install maven -y
+fi
 
 if [ ! -x $HOME/sfc/sfc-karaf/target/assembly/bin/karaf ]; then
-    echo "./setup_odl.sh failed to setup karaf"
+    echo "ERRO: ./setup_odl.sh failed to setup karaf"
     exit 1
 fi
 
 if [ ! -d /vagrant/ovs-debs ] && [ -z "$(find /vagrant/ovs-debs -type f)" ]; then
-    echo "./setup_odl.sh failed to build openvswitch .deb files"
+    echo "ERRO: ./setup_odl.sh failed to build openvswitch .deb files"
     exit 1
 fi
 
