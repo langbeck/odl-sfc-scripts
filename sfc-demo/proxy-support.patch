@@ -1,4 +1,4 @@
-commit a38290efee2e1f3f51f3f883c5c213dd1800477e
+commit 57b8af057c4c5f79d3ce58082ee846cde051a4e9
 Author: Langbeck <langbeck@hpe.com>
 Date:   Tue Nov 8 20:59:37 2016 -0200
 
@@ -58,7 +58,7 @@ index db9c780..097566c
  
  
 diff --git a/sfc-demo/sfc103/setup_odl.sh b/sfc-demo/sfc103/setup_odl.sh
-index 64c758b..8afc0ba 100755
+index 64c758b..b888673 100755
 --- a/sfc-demo/sfc103/setup_odl.sh
 +++ b/sfc-demo/sfc103/setup_odl.sh
 @@ -1,7 +1,7 @@
@@ -70,15 +70,6 @@ index 64c758b..8afc0ba 100755
  
  function install_packages {
      sudo apt-get install npm vim git git-review diffstat bridge-utils -y
-@@ -53,7 +53,7 @@ function install_ovs {
- function install_sfc {
-     cd $HOME
-     if [[ -n $DIST_URL ]]; then
--        curl $DIST_URL/maven-metadata.xml | grep -A2 tar.gz | grep value | cut -f2 -d'>' | cut -f1 -d'<' | \
-+        http_proxy= curl $DIST_URL/maven-metadata.xml | grep -A2 tar.gz | grep value | cut -f2 -d'>' | cut -f1 -d'<' | \
-             xargs -I {} curl $DIST_URL/distribution-karaf-{}.tar.gz | tar xvz-
-         rm -rf $HOME/sfc; mkdir -p $HOME/sfc/sfc-karaf/target
-         mv distribution-karaf* $HOME/sfc/sfc-karaf/target/assembly
 diff --git a/sfc-demo/sfc103/setup_proxy.sh b/sfc-demo/sfc103/setup_proxy.sh
 new file mode 100755
 index 0000000..e3006b3
