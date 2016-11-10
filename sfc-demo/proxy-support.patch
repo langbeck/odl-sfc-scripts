@@ -1,4 +1,4 @@
-commit aaf7a1e13173002f2347f33c54b242a68372b28b
+commit a38290efee2e1f3f51f3f883c5c213dd1800477e
 Author: Langbeck <langbeck@hpe.com>
 Date:   Tue Nov 8 20:59:37 2016 -0200
 
@@ -58,7 +58,7 @@ index db9c780..097566c
  
  
 diff --git a/sfc-demo/sfc103/setup_odl.sh b/sfc-demo/sfc103/setup_odl.sh
-index 64c758b..9b089d4 100755
+index 64c758b..8afc0ba 100755
 --- a/sfc-demo/sfc103/setup_odl.sh
 +++ b/sfc-demo/sfc103/setup_odl.sh
 @@ -1,7 +1,7 @@
@@ -66,7 +66,7 @@ index 64c758b..9b089d4 100755
  
  # setup sfc from pre-build. If DIST_URL is null, build sfc from scratch
 -DIST_URL=https://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/org/opendaylight/integration/distribution-karaf/0.5.1-SNAPSHOT/
-+DIST_URL=http://sdcs-nexus.americas.hpqcorp.net/content/repositories/opendaylight.snapshot/org/opendaylight/integration/distribution-karaf/0.5.1-SNAPSHOT/
++DIST_URL=http://nexus.opendaylight.org/content/repositories/opendaylight.snapshot/org/opendaylight/integration/distribution-karaf/0.5.1-SNAPSHOT/
  
  function install_packages {
      sudo apt-get install npm vim git git-review diffstat bridge-utils -y
