@@ -31,7 +31,9 @@ git reset --hard f65065b19516a750b73262c63ba269fca2365e23
 
 # Apply patches required to add proxy support
 cp $PATCH_DIR/*.patch ./
-git apply *.patch
+git config user.email odl@opendaylight.org
+git config user.name odl
+git am *.patch
 
 # Configure proxy environment files (docker, apt, profile, sudoers, etc)
 cd sfc-demo/sfc103
@@ -49,6 +51,16 @@ test -d /vagrant || sudo ln -s "/sfc/sfc-demo/sfc103" /vagrant
 
 # Run the "original" setup_odl.sh
 ./setup_odl.sh
+
+if [ ! -x $HOME/sfc/sfc-karaf/target/assembly/bin/karaf ]; then
+    echo "./setup_odl.sh failed to setup karaf"
+    exit 1
+fi
+
+if [ ! -d /vagrant/ovs-debs ] && [ -z "$(find /vagrant/ovs-debs -type f)" ]; then
+    echo "./setup_odl.sh failed to build openvswitch .deb files"
+    exit 1
+fi
 
 # Build in advance the sfc-service-node with the correct proxy configuration
 cd /vagrant
