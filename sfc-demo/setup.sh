@@ -29,6 +29,10 @@ sudo $SCRIPTS_DIR/setup_proxy.sh "${http_proxy}"
 # Install docker
 if ! which docker > /dev/null; then
     curl -L https://get.docker.com/ | sudo sh
+    if ! which docker > /dev/null; then
+        echo "ERRO: docker installation failed"
+        exit 1
+    fi
     sudo usermod -aG docker "${USER}"
 fi
 
@@ -44,16 +48,18 @@ cp $SCRIPTS_DIR/*.patch ./
 git apply *.patch
 
 # Link base directories
-cd sfc-demo/sfc103
-test -d /sfc || sudo ln -s "$(realpath ${PWD}/../..)" /sfc
+test -d /sfc || sudo ln -s "${PWD}" /sfc
 test -d /vagrant || sudo ln -s "/sfc/sfc-demo/sfc103" /vagrant
 
 # Run the "original" setup_odl.sh
+cd sfc-demo/sfc103
 if ! ./setup_odl.sh; then
     echo "ERRO: ./setup_odl.sh exited with non-zero status code"
     exit 1
 fi
 
+# Ensure everything is "OK" in apt after ./setup_odl.sh
+sudo apt install -f -y
 
 if ! which java > /dev/null; then
     echo "ERRO: ./setup_odl.sh failed to install java (trying: apt install openjdk-8-jdk)"
@@ -78,4 +84,8 @@ fi
 
 # Build in advance the sfc-service-node with the correct proxy configuration
 cd /vagrant
-sudo docker build --build-arg "http_proxy=${http_proxy}" . -t sfc-service-node
+sudo docker build --build-arg "http_proxy=${http_proxy}" . -t sfc-service-node || true
+if [ -z "$(sudo docker images -q sfc-service-node)" ]; then
+    echo "ERRO: pre-build of sfc-service-node failed"
+    exit 1
+fi
